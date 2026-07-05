@@ -1,10 +1,12 @@
 {
   "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
-  "name": "barrow",
+  "name": "barrow-game",
   "permissions": {
     "redis": true,
     "reddit": {
-      "asUser": ["SUBMIT_COMMENT"]
+      "asUser": [
+        "SUBMIT_COMMENT"
+      ]
     }
   },
   "post": {
