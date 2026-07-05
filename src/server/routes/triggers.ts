@@ -4,7 +4,7 @@ import type { OnAppInstallRequest, TriggerResponse } from '@devvit/web/shared';
 
 const triggers = new Hono();
 
-triggers.post('/on-install', async (c) => {
+triggers.post('/', async (c) => {
   try {
     await createTodayPost();
     const input = await c.req.json<OnAppInstallRequest>();
