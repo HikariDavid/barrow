@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width, height=device-height, user-scalable=0"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@700&family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>BARROW</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; overflow: hidden; background: #0B0B10; }
+      #game-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+      canvas { image-rendering: pixelated; }
+    </style>
+  </head>
+  <body>
+    <div id="game-container"></div>
+    <script type="module" src="game.ts"></script>
+  </body>
+</html>

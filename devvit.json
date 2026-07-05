@@ -1,0 +1,73 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "barrow",
+  "permissions": {
+    "redis": true,
+    "reddit": {
+      "asUser": ["SUBMIT_COMMENT"]
+    }
+  },
+  "post": {
+    "dir": "dist/client",
+    "entrypoints": {
+      "default": {
+        "inline": true,
+        "entry": "splash.html"
+      },
+      "game": {
+        "entry": "game.html"
+      }
+    }
+  },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.cjs"
+  },
+  "menu": {
+    "items": [
+      {
+        "label": "Barrow: Create Today's Post",
+        "description": "Create or recreate today's daily post",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/create-post"
+      },
+      {
+        "label": "Barrow: Seed the First Dead",
+        "description": "Write lore graves into today and tomorrow",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/seed-first-dead"
+      },
+      {
+        "label": "Barrow: Advance Day (+1)",
+        "description": "Shift game date forward for testing",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/advance-day"
+      },
+      {
+        "label": "Barrow: Reset Day Offset",
+        "description": "Reset to real UTC date",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/reset-offset"
+      }
+    ]
+  },
+  "scheduler": {
+    "tasks": {
+      "daily-rollover": {
+        "endpoint": "/internal/scheduler/daily-rollover",
+        "cron": "0 0 * * *"
+      }
+    }
+  },
+  "triggers": {
+    "onAppInstall": "/internal/on-install"
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  }
+}
