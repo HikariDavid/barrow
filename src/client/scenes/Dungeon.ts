@@ -22,7 +22,8 @@ export class Dungeon extends Phaser.Scene {
   private enemySprites: Phaser.GameObjects.Image[] = [];
   private itemSprites: Phaser.GameObjects.Image[] = [];
   private graveSprites: Phaser.GameObjects.Image[] = [];
-  private overlay!: Phaser.GameObjects.Graphics;
+  private lightRT!: Phaser.GameObjects.RenderTexture;
+  private lightGfx!: Phaser.GameObjects.Graphics;
   private exploredLayer!: Phaser.GameObjects.Graphics;
   private hud!: Hud;
   private autoWalkTarget: { x: number; y: number } | null = null;
@@ -38,10 +39,13 @@ export class Dungeon extends Phaser.Scene {
   create() {
     initAudioState();
     this.setupInput();
-    this.overlay = this.add.graphics();
     this.exploredLayer = this.add.graphics();
-    this.overlay.setDepth(100);
     this.exploredLayer.setDepth(99);
+    // RenderTexture overlay: fill dark, erase light circle (Graphics.fillStyle alpha=0 doesn't erase!)
+    this.lightRT = this.add.renderTexture(0, 0, COLS * TILE, ROWS * TILE);
+    this.lightRT.setDepth(100);
+    this.lightGfx = this.add.graphics();
+    this.lightGfx.setVisible(false);
 
     this.hud = new Hud(this);
 
@@ -140,6 +144,9 @@ export class Dungeon extends Phaser.Scene {
       const img = this.add.image(item.x * TILE + TILE / 2, item.y * TILE + TILE / 2, 'barrow-sprites');
       img.setCrop(this.getItemCrop(item.type));
       img.setDepth(5);
+      img.setData('tx', item.x);
+      img.setData('ty', item.y);
+      img.setAlpha(0); // hidden until FOV reveals
       this.itemSprites.push(img);
     }
 
@@ -412,39 +419,69 @@ export class Dungeon extends Phaser.Scene {
     const { visible, explored } = computeFov(this.floor.tiles, this.player.x, this.player.y, radius, this.explored);
     this.explored = explored;
 
-    // Update tile visibility
+    // --- Tile visibility ---
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
         const key = `${x},${y}`;
         const img = this.tileSprites[y]?.[x];
         if (img) {
-          img.setAlpha(visible.has(key) ? 1 : explored.has(key) ? 0.15 : 0);
+          img.setAlpha(visible.has(key) ? 1 : explored.has(key) ? 0.18 : 0);
         }
       }
     }
 
-    // Update overlay
-    this.overlay.clear();
-    this.overlay.fillStyle(0x0b0b10, 1);
-    this.overlay.fillRect(0, 0, COLS * TILE, ROWS * TILE);
+    // --- Enemy visibility ---
+    for (let i = 0; i < this.floor.enemies.length; i++) {
+      const e = this.floor.enemies[i]!;
+      const sprite = this.enemySprites[i];
+      if (sprite) sprite.setAlpha(visible.has(`${e.x},${e.y}`) ? 1 : 0);
+    }
 
-    // Erase circle at player
+    // --- Item visibility (sprites store tx/ty in data) ---
+    for (const sprite of this.itemSprites) {
+      const tx = sprite.getData('tx') as number;
+      const ty = sprite.getData('ty') as number;
+      const key = `${tx},${ty}`;
+      sprite.setAlpha(visible.has(key) ? 1 : explored.has(key) ? 0.5 : 0);
+    }
+
+    // --- Grave visibility ---
+    for (let i = 0; i < this.floor.graves.length; i++) {
+      const g = this.floor.graves[i]!;
+      const sprite = this.graveSprites[i];
+      if (sprite) {
+        const key = `${g.x},${g.y}`;
+        sprite.setAlpha(visible.has(key) ? 1 : explored.has(key) ? 0.3 : 0);
+      }
+    }
+
+    // --- RenderTexture torch light ---
+    // Fill RT with darkness, then ERASE a gradient circle at the player position.
+    // This is the correct Phaser approach — Graphics fillStyle(color, 0) does NOT erase!
     const cx = this.player.x * TILE + TILE / 2;
     const cy = this.player.y * TILE + TILE / 2;
     const r = radius * TILE;
-    for (let i = 12; i >= 0; i--) {
-      const t = i / 12;
-      this.overlay.fillStyle(0x0b0b10, t);
-      this.overlay.fillCircle(cx, cy, r * t);
-    }
 
-    // Explored layer
+    this.lightRT.clear();
+    this.lightRT.fill(0x0b0b10, 0.9);
+
+    // Build gradient: bright at center, transparent at edge
+    this.lightGfx.clear();
+    const steps = 10;
+    for (let i = steps; i >= 1; i--) {
+      const t = i / steps;
+      this.lightGfx.fillStyle(0xffffff, t);
+      this.lightGfx.fillCircle(cx, cy, r * t);
+    }
+    this.lightRT.erase(this.lightGfx, 0, 0);
+
+    // --- Explored memory dimming ---
     this.exploredLayer.clear();
     for (const key of this.explored) {
       if (!visible.has(key)) {
         const [x, y] = key.split(',').map(Number);
         if (x !== undefined && y !== undefined) {
-          this.exploredLayer.fillStyle(0xe8e0ce, 0.08);
+          this.exploredLayer.fillStyle(0xe8e0ce, 0.06);
           this.exploredLayer.fillRect(x * TILE, y * TILE, TILE, TILE);
         }
       }

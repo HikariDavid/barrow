@@ -1,10 +1,9 @@
 import { Boot } from './scenes/Boot';
 import { Dungeon } from './scenes/Dungeon';
-import * as Phaser from 'phaser';
-import { AUTO, Game } from 'phaser';
+import Phaser from 'phaser';
 
 const config: Phaser.Types.Core.GameConfig = {
-  type: AUTO,
+  type: Phaser.CANVAS, // Force CANVAS — WebGL can fail silently in Reddit's iframe sandbox
   parent: 'game-container',
   backgroundColor: '#0B0B10',
   scale: {
@@ -26,7 +25,7 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 const StartGame = (parent: string) => {
-  return new Game({ ...config, parent });
+  return new Phaser.Game({ ...config, parent });
 };
 
 document.addEventListener('DOMContentLoaded', () => {

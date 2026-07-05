@@ -71,5 +71,8 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch"
+  },
+  "dev": {
+    "subreddit": "barrow_game_dev"
   }
 }
